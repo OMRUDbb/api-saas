@@ -1,0 +1,17 @@
+{
+  "name": "url-safety-api-saas",
+  "version": "1.0.0",
+  "description": "URLSafe - URL Safety Checking API SaaS",
+  "scripts": {
+    "dev": "concurrently \"cd frontend && npm run dev\" \"cd backend && npm run dev\"",
+    "build": "npm run build --prefix frontend && npm run build --prefix backend",
+    "install-all": "npm install && npm install --prefix frontend && npm install --prefix backend",
+    "start": "cd backend && npm start"
+  },
+  "keywords": ["url", "safety", "api", "saas"],
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "concurrently": "^8.2.0"
+  }
+}

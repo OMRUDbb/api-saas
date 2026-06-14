@@ -1,0 +1,9 @@
+{
+  "name": "url-safety-api",
+  "version": "1.0.0",
+  "description": "URLSafe API functions for Vercel",
+  "dependencies": {
+    "stripe": "^14.3.0",
+    "@supabase/supabase-js": "^2.38.0"
+  }
+}
