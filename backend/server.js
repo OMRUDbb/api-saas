@@ -22,18 +22,21 @@ const supabase = createClient(
 )
 
 // Middleware
-app.use(cors())
+app.use(cors({
+  origin: process.env.FRONTEND_URL || ['http://localhost:3000', 'http://localhost'],
+  credentials: true
+}))
 app.use(express.json())
 
 // Routes
 
 // Health check
-app.get('/api/health', (req, res) => {
+app.get('/health', (req, res) => {
   res.json({ status: 'ok' })
 })
 
 // Create checkout session
-app.post('/api/create-checkout-session', async (req, res) => {
+app.post('/checkout', async (req, res) => {
   const { priceId, email, fullName } = req.body
 
   try {
@@ -62,7 +65,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
 })
 
 // Webhook for Stripe events
-app.post('/api/webhooks/stripe', express.raw({ type: 'application/json' }), async (req, res) => {
+app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   const sig = req.headers['stripe-signature']
   let event
 
@@ -198,7 +201,7 @@ export async function verifyApiKey(req, res, next) {
 }
 
 // URL check endpoint (protected)
-app.post('/api/check-url', verifyApiKey, async (req, res) => {
+app.post('/check-url', verifyApiKey, async (req, res) => {
   const { url } = req.body
 
   if (!url) {
