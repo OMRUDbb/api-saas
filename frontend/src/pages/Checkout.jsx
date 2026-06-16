@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
-import { createCheckoutSession } from '../lib/stripeCheckout'
+
+const API_URL = (import.meta.env.VITE_API_URL || '/_/backend').replace(/\/$/, '')
 
 function Checkout() {
   const [selectedPlan, setSelectedPlan] = useState('entrepreneur')
@@ -20,12 +21,28 @@ function Checkout() {
     setErrorMessage('')
 
     try {
-      const checkoutUrl = await createCheckoutSession({
-        priceId: plans[selectedPlan].id,
-        email,
-        fullName,
+      const response = await fetch(`${API_URL}/create-checkout-session`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          priceId: plans[selectedPlan].id,
+          email,
+          fullName,
+        }),
       })
-      window.location.assign(checkoutUrl)
+
+      const session = await response.json()
+      if (!response.ok) {
+        throw new Error(session.error || 'Failed to create checkout session')
+      }
+
+      if (session.url) {
+        window.location.href = session.url
+      } else {
+        throw new Error('No checkout URL returned from server')
+      }
     } catch (error) {
       console.error('Checkout error:', error)
       setErrorMessage(error.message || 'Failed to start checkout. Please try again.')

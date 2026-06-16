@@ -94,8 +94,17 @@ app.post('/create-checkout-session', async (req: Request<unknown, unknown, Check
     })
   }
 
-  if (!selectedPriceId || !allowedPriceIds.includes(selectedPriceId)) {
-    return res.status(400).json({ error: 'Invalid Stripe price selected' })
+  if (!selectedPriceId) {
+    return res.status(400).json({ error: 'No price ID provided. Configure Stripe price IDs in environment variables.' })
+  }
+
+  // Only validate price ID if we have configured prices
+  // If no prices are configured in env, allow any price ID for development/testing
+  if (allowedPriceIds.length > 0 && !allowedPriceIds.includes(selectedPriceId)) {
+    return res.status(400).json({ 
+      error: 'Invalid Stripe price selected',
+      details: `Provided: ${selectedPriceId}, Allowed: ${allowedPriceIds.join(', ')}`
+    })
   }
 
   try {
