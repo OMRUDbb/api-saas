@@ -1,43 +1,34 @@
 import React, { useState } from 'react'
-import { loadStripe } from '@stripe/stripe-js'
-
-const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLIC_KEY || 'pk_test_placeholder')
+import { createCheckoutSession } from '../lib/stripeCheckout'
 
 function Checkout() {
-  const [selectedPlan, setSelectedPlan] = useState('professional')
+  const [selectedPlan, setSelectedPlan] = useState('entrepreneur')
   const [loading, setLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
   const [email, setEmail] = useState('')
   const [fullName, setFullName] = useState('')
 
   const plans = {
-    starter: { id: 'price_starter', name: 'Starter', price: 29 },
-    professional: { id: 'price_professional', name: 'Professional', price: 99 },
-    enterprise: { id: 'price_enterprise', name: 'Enterprise', price: 0 }
+    starter: { id: import.meta.env.VITE_STRIPE_PRICE_STARTER || 'price_starter', name: 'Starter', price: 29 },
+    entrepreneur: { id: import.meta.env.VITE_STRIPE_PRICE_ENTREPRENEUR || 'price_entrepreneur', name: 'Entrepreneur', price: 99 },
+    pro: { id: import.meta.env.VITE_STRIPE_PRICE_PRO || 'price_pro', name: 'Pro', price: 199 }
   }
 
   const handleCheckout = async (e) => {
     e.preventDefault()
     setLoading(true)
+    setErrorMessage('')
 
     try {
-      const response = await fetch('/_/backend/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          priceId: plans[selectedPlan].id,
-          email,
-          fullName,
-        }),
+      const checkoutUrl = await createCheckoutSession({
+        priceId: plans[selectedPlan].id,
+        email,
+        fullName,
       })
-
-      const session = await response.json()
-      const stripe = await stripePromise
-      await stripe.redirectToCheckout({ sessionId: session.sessionId })
+      window.location.assign(checkoutUrl)
     } catch (error) {
       console.error('Checkout error:', error)
-      alert('Failed to start checkout. Please try again.')
+      setErrorMessage(error.message || 'Failed to start checkout. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -146,6 +137,12 @@ function Checkout() {
                 >
                   {loading ? 'Processing...' : 'Proceed to Payment'}
                 </button>
+
+                {errorMessage && (
+                  <p className="text-sm text-red-600 text-center">
+                    {errorMessage}
+                  </p>
+                )}
 
                 {plans[selectedPlan].price === 0 && (
                   <p className="text-sm text-gray-600 text-center">

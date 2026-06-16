@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import { redirectToCheckout } from '../lib/stripeCheckout'
 
 const plans = [
   {
@@ -14,7 +15,8 @@ const plans = [
       'REST API access',
       '99.5% uptime SLA'
     ],
-    highlighted: false
+    highlighted: false,
+    planKey: 'starter'
   },
   {
     name: 'Professional',
@@ -30,7 +32,8 @@ const plans = [
       'Custom threat rules',
       'Webhook support'
     ],
-    highlighted: true
+    highlighted: true,
+    planKey: 'entrepreneur'
   },
   {
     name: 'Enterprise',
@@ -47,11 +50,28 @@ const plans = [
       'On-premise option',
       'SSO & advanced security'
     ],
-    highlighted: false
+    highlighted: false,
+    planKey: null
   }
 ]
 
 function Pricing() {
+  const [loadingPlan, setLoadingPlan] = useState(null)
+  const [errorMessage, setErrorMessage] = useState('')
+
+  const handleGetStarted = async (plan) => {
+    setLoadingPlan(plan.planKey)
+    setErrorMessage('')
+
+    try {
+      await redirectToCheckout({ plan: plan.planKey })
+    } catch (error) {
+      console.error('Checkout error:', error)
+      setErrorMessage(error.message || 'Unable to start checkout. Please try again.')
+      setLoadingPlan(null)
+    }
+  }
+
   return (
     <section id="pricing" className="py-20 md:py-32 bg-white">
       <div className="container mx-auto px-6">
@@ -86,16 +106,31 @@ function Pricing() {
                 </span>
               </div>
 
-              <Link 
-                to="/checkout"
-                className={`block w-full py-3 px-6 rounded-lg font-semibold text-center mb-8 transition-colors ${
-                  plan.highlighted
-                    ? 'bg-white text-blue-600 hover:bg-gray-100'
-                    : 'bg-blue-600 text-white hover:bg-blue-700'
-                }`}
-              >
-                Get Started
-              </Link>
+              {plan.planKey ? (
+                <button
+                  type="button"
+                  onClick={() => handleGetStarted(plan)}
+                  disabled={loadingPlan === plan.planKey}
+                  className={`block w-full py-3 px-6 rounded-lg font-semibold text-center mb-8 transition-colors disabled:opacity-60 disabled:cursor-not-allowed ${
+                    plan.highlighted
+                      ? 'bg-white text-blue-600 hover:bg-gray-100'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                >
+                  {loadingPlan === plan.planKey ? 'Redirecting...' : 'Get Started'}
+                </button>
+              ) : (
+                <Link
+                  to="/checkout"
+                  className={`block w-full py-3 px-6 rounded-lg font-semibold text-center mb-8 transition-colors ${
+                    plan.highlighted
+                      ? 'bg-white text-blue-600 hover:bg-gray-100'
+                      : 'bg-blue-600 text-white hover:bg-blue-700'
+                  }`}
+                >
+                  Contact Sales
+                </Link>
+              )}
 
               <ul className="space-y-3">
                 {plan.features.map((feature, fIndex) => (
@@ -112,6 +147,11 @@ function Pricing() {
         </div>
 
         <div className="text-center mt-12">
+          {errorMessage && (
+            <p className="text-red-600 mb-4">
+              {errorMessage}
+            </p>
+          )}
           <p className="text-gray-600">
             Not sure which plan? <a href="#" className="text-blue-600 font-semibold hover:underline">Contact our sales team</a>
           </p>

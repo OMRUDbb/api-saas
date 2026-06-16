@@ -4,6 +4,8 @@ import Navbar from './components/Navbar'
 import Footer from './components/Footer'
 import Home from './pages/Home'
 import Checkout from './pages/Checkout'
+import Success from './pages/Success'
+import Cancel from './pages/Cancel'
 import './App.css'
 
 function App() {
@@ -15,6 +17,9 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/succes" element={<Success />} />
+            <Route path="/success" element={<Success />} />
+            <Route path="/cancel" element={<Cancel />} />
           </Routes>
         </main>
         <Footer />
