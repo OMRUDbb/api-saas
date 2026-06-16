@@ -9,8 +9,8 @@
       "root": "backend",
       "routePrefix": "/_/backend",
       "framework": "express",
-      "buildCommand": "npm run build",
-      "outputDirectory": "dist"
+      "buildCommand": "npm run build"
+
     }
   }
 }
