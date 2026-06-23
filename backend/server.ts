@@ -50,6 +50,13 @@ const stripePrices: Record<PlanKey, string | undefined> = {
   pro: getEnv('stripe_price_pro', 'STRIPE_PRICE_PRO')
 }
 
+// Hardcoded fallback prices from your Stripe account
+const FALLBACK_PRICES: Record<PlanKey, string> = {
+  starter: 'price_1TiLHo2Yw7BUASOy1HENYyVc',
+  entrepreneur: 'price_1TiLEq2Yw7BUASOyKr7cpevz',
+  pro: 'price_1TiLHI2Yw7BUASOygPrCe1M2'
+}
+
 type CheckoutRequestBody = {
   plan?: PlanKey
   priceId?: string
@@ -85,8 +92,15 @@ app.get('/prices', (req, res) => {
 
 app.post('/create-checkout-session', async (req: Request<unknown, unknown, CheckoutRequestBody>, res: Response) => {
   const { plan = 'entrepreneur', priceId, email, fullName } = req.body
-  const allowedPriceIds = Object.values(stripePrices).filter(Boolean)
-  const selectedPriceId = priceId || stripePrices[plan]
+  
+  // Use fallback prices if environment variables are not set
+  const prices: Record<PlanKey, string> = {
+    starter: stripePrices.starter || FALLBACK_PRICES.starter,
+    entrepreneur: stripePrices.entrepreneur || FALLBACK_PRICES.entrepreneur,
+    pro: stripePrices.pro || FALLBACK_PRICES.pro
+  }
+  
+  const selectedPriceId = priceId || prices[plan]
 
   if (!stripe) {
     return res.status(500).json({
@@ -95,15 +109,16 @@ app.post('/create-checkout-session', async (req: Request<unknown, unknown, Check
   }
 
   if (!selectedPriceId) {
-    return res.status(400).json({ error: 'No price ID provided. Configure Stripe price IDs in environment variables.' })
+    return res.status(400).json({ error: 'No price ID provided.' })
   }
 
-  // Only validate price ID if we have configured prices
-  // If no prices are configured in env, allow any price ID for development/testing
-  if (allowedPriceIds.length > 0 && !allowedPriceIds.includes(selectedPriceId)) {
-    return res.status(400).json({ 
+  // Always allow our fallback prices
+  const allowedPriceIds = [...Object.values(prices), ...Object.values(FALLBACK_PRICES)]
+  
+  if (!allowedPriceIds.includes(selectedPriceId)) {
+    return res.status(400).json({
       error: 'Invalid Stripe price selected',
-      details: `Provided: ${selectedPriceId}, Allowed: ${allowedPriceIds.join(', ')}`
+      details: `Provided: ${selectedPriceId}`
     })
   }
 
