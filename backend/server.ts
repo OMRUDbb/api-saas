@@ -39,26 +39,24 @@ const allowedOrigins = [
 
 const stripeSecretKey = getEnv('stripe_secret_key', 'STRIPE_SECRET_KEY')
 
+console.log('DEBUG: stripe_secret_key value:', stripeSecretKey ? 'SET' : 'NOT SET')
+console.log('DEBUG: All env keys:', Object.keys(process.env).filter(k => k.toLowerCase().includes('stripe')))
+
 const stripe = stripeSecretKey
   ? new Stripe(stripeSecretKey, {
       apiVersion: '2023-10-16'
     })
   : null
 
-type PlanKey = 'starter' | 'entrepreneur' | 'pro'
+type PlanKey = 'starter' | 'professional' | 'entrepreneur'
 
 const stripePrices: Record<PlanKey, string | undefined> = {
   starter: getEnv('stripe_price_starter', 'STRIPE_PRICE_STARTER'),
-  entrepreneur: getEnv('stripe_price_entrepreneur', 'STRIPE_PRICE_ENTREPRENEUR'),
-  pro: getEnv('stripe_price_pro', 'STRIPE_PRICE_PRO')
+  professional: getEnv('stripe_price_professional', 'STRIPE_PRICE_PROFESSIONAL'),
+  entrepreneur: getEnv('stripe_price_entrepreneur', 'STRIPE_PRICE_ENTREPRENEUR')
 }
 
-// Hardcoded fallback prices from your Stripe account
-const FALLBACK_PRICES: Record<PlanKey, string> = {
-  starter: 'price_1TiLHo2Yw7BUASOy1HENYyVc',
-  entrepreneur: 'price_1TiLEq2Yw7BUASOyKr7cpevz',
-  pro: 'price_1TiLHI2Yw7BUASOygPrCe1M2'
-}
+// No fallback prices - user must configure environment variables with their actual Stripe price IDs
 
 type CheckoutRequestBody = {
   plan?: PlanKey
@@ -95,15 +93,6 @@ app.get('/prices', (req, res) => {
 
 app.post('/create-checkout-session', async (req: Request<unknown, unknown, CheckoutRequestBody>, res: Response) => {
   const { plan = 'entrepreneur', priceId, email, fullName } = req.body
-  
-  // Use fallback prices if environment variables are not set
-  const prices: Record<PlanKey, string> = {
-    starter: stripePrices.starter || FALLBACK_PRICES.starter,
-    entrepreneur: stripePrices.entrepreneur || FALLBACK_PRICES.entrepreneur,
-    pro: stripePrices.pro || FALLBACK_PRICES.pro
-  }
-  
-  const selectedPriceId = priceId || prices[plan]
 
   if (!stripe) {
     return res.status(500).json({
@@ -111,17 +100,23 @@ app.post('/create-checkout-session', async (req: Request<unknown, unknown, Check
     })
   }
 
+  const selectedPriceId = priceId || stripePrices[plan]
+
   if (!selectedPriceId) {
-    return res.status(400).json({ error: 'No price ID provided.' })
+    return res.status(400).json({ error: 'No price ID provided. Please configure stripe_price_starter, stripe_price_professional, and stripe_price_entrepreneur environment variables.' })
   }
 
-  // Always allow our fallback prices
-  const allowedPriceIds = [...Object.values(prices), ...Object.values(FALLBACK_PRICES)]
-  
+  // Allow any price ID that's configured in environment variables
+  const allowedPriceIds = Object.values(stripePrices).filter(Boolean) as string[]
+
+  if (allowedPriceIds.length === 0) {
+    return res.status(500).json({ error: 'No Stripe price IDs configured. Please add stripe_price_starter, stripe_price_professional, and stripe_price_entrepreneur to your environment variables.' })
+  }
+
   if (!allowedPriceIds.includes(selectedPriceId)) {
     return res.status(400).json({
       error: 'Invalid Stripe price selected',
-      details: `Provided: ${selectedPriceId}`
+      details: `Provided: ${selectedPriceId}. Available: ${allowedPriceIds.join(', ')}`
     })
   }
 

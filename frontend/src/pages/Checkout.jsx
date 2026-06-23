@@ -10,9 +10,9 @@ function Checkout() {
   const [fullName, setFullName] = useState('')
 
   const plans = {
-    starter: { id: import.meta.env.VITE_STRIPE_PRICE_STARTER || 'price_starter', name: 'Starter', price: 29 },
-    entrepreneur: { id: import.meta.env.VITE_STRIPE_PRICE_ENTREPRENEUR || 'price_entrepreneur', name: 'Entrepreneur', price: 99 },
-    pro: { id: import.meta.env.VITE_STRIPE_PRICE_PRO || 'price_pro', name: 'Pro', price: 199 }
+    starter: { id: import.meta.env.VITE_STRIPE_PRICE_STARTER || '', name: 'Starter', price: 9.99 },
+    professional: { id: import.meta.env.VITE_STRIPE_PRICE_PROFESSIONAL || '', name: 'Professional', price: 29.99 },
+    entrepreneur: { id: import.meta.env.VITE_STRIPE_PRICE_ENTREPRENEUR || '', name: 'Entrepreneur', price: 99.99 }
   }
 
   const handleCheckout = async (e) => {

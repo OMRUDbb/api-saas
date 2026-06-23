@@ -5,7 +5,7 @@ import { redirectToCheckout } from '../lib/stripeCheckout'
 const plans = [
   {
     name: 'Starter',
-    price: '$29',
+    price: '$9.99',
     period: '/month',
     description: 'Perfect for small projects',
     features: [
@@ -20,7 +20,7 @@ const plans = [
   },
   {
     name: 'Professional',
-    price: '$99',
+    price: '$29.99',
     period: '/month',
     description: 'For growing businesses',
     features: [
@@ -33,12 +33,12 @@ const plans = [
       'Webhook support'
     ],
     highlighted: true,
-    planKey: 'entrepreneur'
+    planKey: 'professional'
   },
   {
-    name: 'Enterprise',
-    price: 'Custom',
-    period: 'pricing',
+    name: 'Entrepreneur',
+    price: '$99.99',
+    period: '/month',
     description: 'Unlimited possibilities',
     features: [
       'Unlimited API calls',
@@ -51,7 +51,7 @@ const plans = [
       'SSO & advanced security'
     ],
     highlighted: false,
-    planKey: null
+    planKey: 'entrepreneur'
   }
 ]
 
